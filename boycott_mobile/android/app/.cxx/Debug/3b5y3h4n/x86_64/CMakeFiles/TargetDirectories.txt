@@ -1,0 +1,2 @@
+C:/Users/Dell XPS/saas/boycott-for-gaza/boycott_mobile/android/app/.cxx/Debug/3b5y3h4n/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/Dell XPS/saas/boycott-for-gaza/boycott_mobile/android/app/.cxx/Debug/3b5y3h4n/x86_64/CMakeFiles/rebuild_cache.dir

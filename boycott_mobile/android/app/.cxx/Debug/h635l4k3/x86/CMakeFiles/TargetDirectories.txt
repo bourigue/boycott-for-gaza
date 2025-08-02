@@ -1,0 +1,2 @@
+C:/Users/Dell XPS/StudioProjects/mif/android/app/.cxx/Debug/h635l4k3/x86/CMakeFiles/edit_cache.dir
+C:/Users/Dell XPS/StudioProjects/mif/android/app/.cxx/Debug/h635l4k3/x86/CMakeFiles/rebuild_cache.dir
