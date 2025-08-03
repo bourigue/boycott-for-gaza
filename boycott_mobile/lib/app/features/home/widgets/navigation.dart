@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../DesignSystem/template/app_colors.dart';
-import '../../change/BoycottRecommendationsPage.dart';
+import '../../product/add_product.dart';
+import '../../recommendations/boycott_recommendations.dart';
 import '../home.dart';
 
 class MyNavigationBar extends StatefulWidget {
@@ -24,6 +25,7 @@ class _MyNavigationBarState extends State<MyNavigationBar> {
     BoycottRecommendationsPage(),
     HomePage(),
     HomePage(),
+    CreateProductPage(),
   ];
 
   @override
@@ -104,6 +106,10 @@ class _MyNavigationBarState extends State<MyNavigationBar> {
                       GButton(
                         icon: Icons.search_rounded,
                         text: 'Search',
+                      ),
+                      GButton(
+                        icon: Icons.add_circle_outline_sharp,
+                        text: 'Add',
                       ),
                     ],
                     selectedIndex: _selectedIndex,

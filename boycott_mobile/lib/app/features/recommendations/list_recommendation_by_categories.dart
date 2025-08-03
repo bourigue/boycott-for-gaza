@@ -96,7 +96,6 @@ class _ProductListItem extends StatelessWidget {
               child: _buildImage(imageUrl),
             ),
             const SizedBox(width: 16),
-
             // Product Info
             Expanded(
               child: Column(
@@ -120,7 +119,7 @@ class _ProductListItem extends StatelessWidget {
                 ],
               ),
             ),
-
+            const SizedBox(width: 16),
             // Status Indicator
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -147,6 +146,7 @@ class _ProductListItem extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(width: 16),
           ],
         ),
       ),

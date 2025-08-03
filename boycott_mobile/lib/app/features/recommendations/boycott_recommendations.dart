@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../DesignSystem/template/app_colors.dart';
-import 'listRecommendationByCategories.dart';
+import 'list_recommendation_by_categories.dart';
 
 class BoycottRecommendationsPage extends StatelessWidget {
   const BoycottRecommendationsPage({Key? key}) : super(key: key);
