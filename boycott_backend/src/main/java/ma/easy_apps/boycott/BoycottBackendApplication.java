@@ -1,11 +1,10 @@
 package ma.easy_apps.boycott;
 
-import ma.easy_apps.boycott.entities.AlternativeProduct;
-import ma.easy_apps.boycott.entities.BoycottProduct;
-import ma.easy_apps.boycott.entities.ProductCategory;
-import ma.easy_apps.boycott.repos.AlternativeProductRepository;
-import ma.easy_apps.boycott.repos.BoycottProductRepository;
-import ma.easy_apps.boycott.repos.ProductCategoryRepository;
+
+import ma.easy_apps.boycott.dto.input.CreateCategoryInput;
+import ma.easy_apps.boycott.dto.input.CreateProductInput;
+import ma.easy_apps.boycott.services.ProductCategoryService;
+import ma.easy_apps.boycott.services.ProductService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -21,39 +20,52 @@ public class BoycottBackendApplication {
     public static void main(String[] args) {
         SpringApplication.run(BoycottBackendApplication.class, args);
     }
-
     @Bean
-    public CommandLineRunner run(ProductCategoryRepository productCategoryRepository,
-                    BoycottProductRepository boycottProductRepository,
-                    AlternativeProductRepository alternativeProductRepository) {
+    CommandLineRunner initData(ProductService productService, ProductCategoryService productCategoryService) {
         return args -> {
-            // Initialize product categories
-            if (productCategoryRepository.count() == 0) {
-                productCategoryRepository.saveAll(List.of(
-                        new ProductCategory("Food", "Food products"),
-                        new ProductCategory("Electronics", "Electronic devices"),
-                        new ProductCategory("Clothing", "Apparel and clothing items")
-                ));
-            }
-            // Initialize alternative products
-            if (alternativeProductRepository.count() == 0) {
-                List<AlternativeProduct> alternativeProducts = alternativeProductRepository.saveAll(List.of(
-                        new AlternativeProduct(true, "Alternative 1", "QR123", "http://example.com/alt1.jpg",null),
-                        new AlternativeProduct(true, "Alternative 2", "QR456", "http://example.com/alt2.jpg",null),
-                        new AlternativeProduct(true, "Alternative 3", "QR789", "http://example.com/alt3.jpg", null),
-                        new AlternativeProduct(true, "Alternative 4", "QR101112", "http://example.com/alt4.jpg",null)
-                ));
-                // Initialize boycott products
-                if (boycottProductRepository.count() == 0) {
-                    List<ProductCategory> productCategories = productCategoryRepository.findAll();
-                    boycottProductRepository.saveAll(List.of(
-                            new BoycottProduct(true, "Boycott Product 1", "QR001", "http://example.com/boycott1.jpg", productCategories.get(0),alternativeProducts.stream().filter(ap -> ap.getQrCode().equals("QR123") || ap.getQrCode().equals("QR456")).toList()),
-                            new BoycottProduct(true, "Boycott Product 2", "QR002", "http://example.com/boycott2.jpg", productCategories.get(1),alternativeProducts.stream().filter(ap -> ap.getQrCode().equals("QR789") || ap.getQrCode().equals("QR101112")).toList()),
-                            new BoycottProduct(true, "Boycott Product 3", "QR003", "http://example.com/boycott3.jpg", productCategories.get(2),alternativeProducts.stream().filter(ap -> ap.getQrCode().equals("QR123") || ap.getQrCode().equals("QR456") || ap.getQrCode().equals("QR789")).toList()
-                            ))
-                    );
-                }
-            }
+            //create some categories
+            List.of("Electronics", "Clothing", "Food", "Health & Beauty", "Home & Garden").forEach(categoryName -> {
+                CreateCategoryInput input = new CreateCategoryInput();
+                input.setName(categoryName);
+                productCategoryService.createCategory(input);
+            });
+            //create some products
+            productService.createProduct(CreateProductInput.builder()
+                    .name("Smartphone")
+                    .qrCode("qr-smartphone")
+                    .categoryName("Electronics")
+                    .imageUrl("cae184ab_20250803_140331.jpg")
+                    .isBoycott(false)
+                    .build());
+            productService.createProduct(CreateProductInput.builder()
+                    .name("T-Shirt")
+                    .qrCode("qr-tshirt")
+                    .categoryName("Clothing")
+                    .imageUrl("cae184ab_20250803_140331.jpg")
+                    .isBoycott(true)
+                    .build());
+            productService.createProduct(CreateProductInput.builder()
+                    .name("Organic Soap")
+                    .qrCode("qr-soap")
+                    .categoryName("Health & Beauty")
+                    .imageUrl("cae184ab_20250803_140331.jpg")
+                    .isBoycott(false)
+                    .build());
+            productService.createProduct(CreateProductInput.builder()
+                    .name("Garden Tools Set")
+                    .qrCode("qr-garden-tools")
+                    .categoryName("Home & Garden")
+                    .imageUrl("cae184ab_20250803_140331.jpg")
+                    .isBoycott(true)
+                    .build());
+            productService.createProduct(CreateProductInput.builder()
+                    .name("Organic Apple Juice")
+                    .qrCode("qr-apple-juice")
+                    .categoryName("Food")
+                    .imageUrl("cae184ab_20250803_140331.jpg")
+                    .isBoycott(false)
+                    .build());
+
         };
     }
 }

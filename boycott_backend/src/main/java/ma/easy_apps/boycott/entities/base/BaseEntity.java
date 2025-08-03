@@ -1,4 +1,4 @@
-package ma.easy_apps.boycott.entities;
+package ma.easy_apps.boycott.entities.base;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
@@ -9,33 +9,40 @@ import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
-
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @MappedSuperclass
-public class BaseEntity<T> implements Serializable {
-
+@Setter @Getter @NoArgsConstructor @AllArgsConstructor
+public class BaseEntity<T> {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String uuid;
-
-    //@Column(nullable = false, updatable = false)
+    private String id;
+    @Column(name ="created_at", nullable = false, updatable = false)
     @CreatedDate
-    @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
-   // @Column(nullable = false)
+    @Column(name ="updated_at")
     @LastModifiedDate
-    @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
-    private T getOverData(BaseEntity<T> data) {
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    public T getOverData(BaseEntity<T> data) {
         return (T) data;
     }
 }
