@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../DesignSystem/template/app_colors.dart';
+import '../../product/add.dart';
 import '../../product/add_product.dart';
 import '../../recommendations/boycott_recommendations.dart';
 import '../home.dart';
@@ -25,7 +26,7 @@ class _MyNavigationBarState extends State<MyNavigationBar> {
     BoycottRecommendationsPage(),
     HomePage(),
     HomePage(),
-    CreateProductPage(),
+    CreationHomePage(),
   ];
 
   @override
