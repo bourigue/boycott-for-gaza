@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:mobile_scanner/mobile_scanner.dart'; // For barcode scanning
 
 class CreateProductPage extends StatefulWidget {
   @override
@@ -12,14 +13,15 @@ class CreateProductPage extends StatefulWidget {
 class _CreateProductPageState extends State<CreateProductPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _arabicNameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _barcodeController = TextEditingController();
   bool _isBoycott = false;
   File? _selectedImage;
   String? _selectedCategoryId;
-  List<Category> _categories = [
-    Category(id: "1", name: "sous"),
-    Category(id: "2", name: "sous")
-  ];
+  List<Category> _categories = [];
   bool _isLoading = false;
+  bool _isScanning = false;
 
   @override
   void initState() {
@@ -33,7 +35,6 @@ class _CreateProductPageState extends State<CreateProductPage> {
     });
 
     try {
-      // Example API call to get categories
       final response = await http.get(
         Uri.parse('https://api.example.com/categories'),
         headers: {'Content-Type': 'application/json'},
@@ -58,13 +59,29 @@ class _CreateProductPageState extends State<CreateProductPage> {
     }
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(source: source);
 
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  void _startBarcodeScan() {
+    setState(() {
+      _isScanning = true;
+    });
+  }
+
+  void _handleBarcodeDetect(BarcodeCapture barcode) {
+    final String? code = barcode.barcodes.first.rawValue;
+    if (code != null) {
+      setState(() {
+        _barcodeController.text = code;
+        _isScanning = false;
       });
     }
   }
@@ -83,21 +100,19 @@ class _CreateProductPageState extends State<CreateProductPage> {
     });
 
     try {
-      // Create multipart request
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('https://api.example.com/products'),
       );
 
-      // Add headers if needed
       request.headers['Authorization'] = 'Bearer your_token_here';
-
-      // Add form fields
       request.fields['name'] = _nameController.text;
+      request.fields['arabicName'] = _arabicNameController.text;
+      request.fields['description'] = _descriptionController.text;
+      request.fields['barcode'] = _barcodeController.text;
       request.fields['isBoycott'] = _isBoycott.toString();
       request.fields['categoryId'] = _selectedCategoryId!;
 
-      // Add image if selected
       if (_selectedImage != null) {
         request.files.add(
           await http.MultipartFile.fromPath(
@@ -107,14 +122,13 @@ class _CreateProductPageState extends State<CreateProductPage> {
         );
       }
 
-      // Send request
       var response = await request.send();
 
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Product created successfully')),
         );
-        Navigator.of(context).pop(true); // Return success
+        Navigator.of(context).pop(true);
       } else {
         throw Exception('Failed to create product: ${response.reasonPhrase}');
       }
@@ -131,6 +145,26 @@ class _CreateProductPageState extends State<CreateProductPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isScanning) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Scan Barcode'),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () => setState(() => _isScanning = false),
+          ),
+        ),
+        body: MobileScanner(
+          onDetect: _handleBarcodeDetect,
+          controller: MobileScannerController(
+            detectionSpeed: DetectionSpeed.normal,
+            facing: CameraFacing.back,
+            torchEnabled: false,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Create New Product'),
@@ -144,11 +178,11 @@ class _CreateProductPageState extends State<CreateProductPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Product Name Field
+                    // English Name
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
-                        labelText: 'Product Name',
+                        labelText: 'Product Name (English)',
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
@@ -158,9 +192,72 @@ class _CreateProductPageState extends State<CreateProductPage> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 20),
+                    SizedBox(height: 16),
 
-                    // Category Dropdown
+                    // Arabic Name
+                    TextFormField(
+                      controller: _arabicNameController,
+                      textDirection: TextDirection.rtl,
+                      decoration: InputDecoration(
+                        labelText: 'اسم المنتج (عربي)',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'الرجاء إدخال اسم المنتج';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 16),
+
+                    // Description
+                    TextFormField(
+                      controller: _descriptionController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        labelText: 'Product Description',
+                        border: OutlineInputBorder(),
+                        alignLabelWithHint: true,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a description';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 16),
+
+                    // Barcode
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _barcodeController,
+                            decoration: InputDecoration(
+                              labelText: 'Barcode',
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please scan or enter barcode';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        IconButton(
+                          icon: Icon(Icons.qr_code_scanner, size: 32),
+                          onPressed: _startBarcodeScan,
+                          tooltip: 'Scan Barcode',
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+
+                    // Category
                     DropdownButtonFormField<String>(
                       value: _selectedCategoryId,
                       decoration: InputDecoration(
@@ -185,19 +282,36 @@ class _CreateProductPageState extends State<CreateProductPage> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 20),
+                    SizedBox(height: 16),
 
                     // Boycott Toggle
-                    SwitchListTile(
-                      title: Text('Is Boycott'),
-                      value: _isBoycott,
-                      onChanged: (bool value) {
-                        setState(() {
-                          _isBoycott = value;
-                        });
-                      },
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SwitchListTile(
+                          title: Text('Is Boycott'),
+                          value: _isBoycott,
+                          onChanged: (bool value) {
+                            setState(() {
+                              _isBoycott = value;
+                            });
+                          },
+                        ),
+                        if (_isBoycott)
+                          Padding(
+                            padding:
+                                EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                            child: Text(
+                              'This product is marked as boycott because it supports Israel or violates Palestinian rights.',
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                    SizedBox(height: 20),
+                    SizedBox(height: 16),
 
                     // Image Upload
                     Column(
@@ -209,32 +323,54 @@ class _CreateProductPageState extends State<CreateProductPage> {
                               TextStyle(fontSize: 16, color: Colors.grey[600]),
                         ),
                         SizedBox(height: 8),
-                        GestureDetector(
-                          onTap: _pickImage,
-                          child: Container(
-                            height: 150,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey),
-                              borderRadius: BorderRadius.circular(8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                icon: Icon(Icons.camera_alt),
+                                label: Text('Camera'),
+                                onPressed: () => _pickImage(ImageSource.camera),
+                                style: ElevatedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                ),
+                              ),
                             ),
-                            child: _selectedImage == null
-                                ? Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.add_a_photo, size: 40),
-                                        Text('Tap to add image'),
-                                      ],
-                                    ),
-                                  )
-                                : Image.file(_selectedImage!,
-                                    fit: BoxFit.cover),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                icon: Icon(Icons.photo_library),
+                                label: Text('Gallery'),
+                                onPressed: () =>
+                                    _pickImage(ImageSource.gallery),
+                                style: ElevatedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Container(
+                          height: 150,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(8),
                           ),
+                          child: _selectedImage == null
+                              ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.add_a_photo, size: 40),
+                                      Text('No image selected'),
+                                    ],
+                                  ),
+                                )
+                              : Image.file(_selectedImage!, fit: BoxFit.cover),
                         ),
                       ],
                     ),
-                    SizedBox(height: 30),
+                    SizedBox(height: 24),
 
                     // Submit Button
                     ElevatedButton(
@@ -243,7 +379,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
                           ? CircularProgressIndicator(color: Colors.white)
                           : Text('Create Product'),
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 15),
+                        padding: EdgeInsets.symmetric(vertical: 16),
                       ),
                     ),
                   ],
@@ -256,11 +392,13 @@ class _CreateProductPageState extends State<CreateProductPage> {
   @override
   void dispose() {
     _nameController.dispose();
+    _arabicNameController.dispose();
+    _descriptionController.dispose();
+    _barcodeController.dispose();
     super.dispose();
   }
 }
 
-// Category model
 class Category {
   final String id;
   final String name;

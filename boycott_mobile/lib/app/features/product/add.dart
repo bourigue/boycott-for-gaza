@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../DesignSystem/template/app_colors.dart';
 import 'add_categories.dart';
 import 'add_product.dart';
 
@@ -59,6 +60,7 @@ class CreationHomePage extends StatelessWidget {
   }) {
     return Card(
       elevation: 4,
+      color: AppColors.WHITE_COLOR,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -72,13 +74,13 @@ class CreationHomePage extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.2),
+                  color: AppColors.PRIMARY_COLOR.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   icon,
                   size: 30,
-                  color: Theme.of(context).primaryColor,
+                  color: AppColors.PRIMARY_COLOR,
                 ),
               ),
               SizedBox(width: 16),
